@@ -2,6 +2,8 @@
 
 A lead-focused personal portfolio for Generative AI Engineer Kaushik Aadhithya Chiratanagandla, based on the supplied Superdesign cinematic direction, resume, and public GitHub work.
 
+Live site: https://mosshead-marimo.github.io/
+
 ## Run Locally
 
 Open `index.html` directly, or serve this directory with a static file server.
