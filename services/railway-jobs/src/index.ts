@@ -1,5 +1,12 @@
-import { db, finishJob, idempotency, workerToken } from "./core.js";
-import { embedKnowledge, prepareContent, prepareOutreach, rollupAnalytics, runLeadScan } from "./jobs.js";
+if(process.argv[2]!=="run-due")throw new Error("Usage: npm run run-due");
+
+if(process.env.WORKER_ENABLED!=="true"){
+  console.log(JSON.stringify({enabled:false,reason:"WORKER_ENABLED is not true",finishedAt:new Date().toISOString()}));
+  process.exit(0);
+}
+
+const { db, finishJob, idempotency, workerToken } = await import("./core.js");
+const { embedKnowledge, prepareContent, prepareOutreach, rollupAnalytics, runLeadScan } = await import("./jobs.js");
 
 async function seedDueJobs(){
   const now=new Date().toISOString();
@@ -25,5 +32,4 @@ async function runDue(){
   console.log(JSON.stringify({workerToken,claimed:(jobs||[]).length,finishedAt:new Date().toISOString()}));
 }
 
-if(process.argv[2]!=="run-due")throw new Error("Usage: npm run run-due");
 await runDue();
