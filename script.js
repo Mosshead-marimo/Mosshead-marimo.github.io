@@ -268,6 +268,9 @@ if (requestForm) {
           ...data,
           consent: requestForm.elements.consent.checked,
           referrer: document.referrer,
+          utmSource: new URLSearchParams(location.search).get("utm_source"),
+          utmMedium: new URLSearchParams(location.search).get("utm_medium"),
+          utmCampaign: new URLSearchParams(location.search).get("utm_campaign"),
         }),
       });
       const result = await response.json().catch(() => ({}));

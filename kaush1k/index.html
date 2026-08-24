@@ -22,7 +22,10 @@
       <a class="logo" href="../">KAUSHIK.AI</a><p class="muted">Operations</p>
       <nav data-nav>
         <button class="active" data-view="dashboard">Overview</button><button data-view="services">Services & prices</button>
-        <button data-view="leads">Lead inbox</button><button data-view="projects">Projects</button><button data-view="analytics">Analytics</button>
+        <button data-view="leads">Lead inbox</button><button data-view="leadfinder">Lead finder</button><button data-view="outreach">Outreach</button>
+        <button data-view="pricing">Pricing calculator</button><button data-view="proposals">Proposals</button><button data-view="projects">Projects</button>
+        <button data-view="finance">Finance</button><button data-view="referrals">Referrals</button><button data-view="content">Content</button>
+        <button data-view="sop">Process SOP</button><button data-view="rag">RAG knowledge</button><button data-view="analytics">Analytics</button><button data-view="settings">Settings</button>
       </nav><button class="signout" data-signout>Sign out</button>
     </aside>
     <section class="workspace">
@@ -53,6 +56,29 @@
         <div class="split leads"><div data-leads></div><article class="detail" data-lead-detail><p class="muted">Select a lead to view and contact.</p></article></div>
       </section>
 
+      <section class="view" data-panel="leadfinder">
+        <div class="split"><form data-source-form><h2>Public source scanner</h2><p class="muted">Only allowlisted public company and careers pages are scanned. Robots rules are always respected.</p>
+          <div class="form-grid"><label>Name<input name="name" required></label><label>Start URL<input name="start_url" type="url" required></label><label class="wide">Service keywords, comma separated<input name="keywords" required placeholder="RAG, document intelligence, LLM evaluation"></label><label class="wide">Exclusions, comma separated<input name="exclusions" placeholder="agency, recruiter"></label><label class="check"><input name="is_enabled" type="checkbox"> Enable daily scanning</label></div><button>Save source</button></form>
+          <article><h2>Configured sources</h2><div data-source-configs></div></article></div>
+        <article><div class="section-heading"><div><h2>Discovery review</h2><p class="muted">Approval requires a verified, public business email. Nothing is contacted automatically.</p></div></div><div data-discovered-leads></div></article>
+      </section>
+
+      <section class="view" data-panel="outreach">
+        <div class="split"><form data-campaign-form><h2>Draft-only campaign</h2><label>Name<input name="name" required></label><label>Daily draft cap<input name="daily_draft_limit" type="number" min="1" max="100" value="20"></label><label>Status<select name="status"><option>draft</option><option>enabled</option><option>paused</option></select></label><button>Save campaign</button></form>
+          <article><h2>Campaigns</h2><div data-campaigns></div></article></div>
+        <article><div class="section-heading"><div><h2>Message approval queue</h2><p class="muted">Approved messages may become Gmail drafts. This system has no send permission.</p></div><button class="ghost" data-connect-gmail>Connect Gmail compose access</button></div><div data-outreach-messages></div></article>
+      </section>
+
+      <section class="view" data-panel="pricing">
+        <div class="split"><form data-pricing-form><h2>Estimate in under five minutes</h2><div class="form-grid"><label>Title<input name="title" required></label><label>Client<input name="client_name"></label><label>Currency<select name="currency"><option>USD</option><option>INR</option></select></label><label>Pricing mode<select name="pricing_mode"><option>fixed</option><option>hourly</option><option>retainer</option><option>variable</option></select></label><label>Quantity<input name="quantity" type="number" min="0" step="0.25" value="1"></label><label>Unit amount<input name="unit_amount" type="number" min="0" step="1" required></label><label>Direct cost<input name="cost_amount" type="number" min="0" step="1" value="0"></label><label>Contingency %<input name="contingency_percent" type="number" min="0" max="100" value="10"></label><label>Tax / GST %<input name="tax_percent" type="number" min="0" max="100" value="0"></label><label>Price floor<input name="price_floor" type="number" min="0" value="0"></label></div><div class="estimate-preview" data-estimate-preview></div><button>Save estimate</button></form>
+          <article><h2>Saved estimates</h2><div data-estimates></div></article></div>
+      </section>
+
+      <section class="view" data-panel="proposals">
+        <div class="split"><form data-proposal-form><h2>Create proposal</h2><div class="form-grid"><label>Title<input name="title" required></label><label>Client<input name="client_name" required></label><label>Currency<select name="currency"><option>USD</option><option>INR</option></select></label><label>Total<input name="total" type="number" min="0" required></label><label class="wide">Executive summary<textarea name="summary" required></textarea></label><label class="wide">Scope and deliverables<textarea name="scope" required></textarea></label><label class="wide">Timeline<textarea name="timeline" required></textarea></label><label class="wide">Assumptions and exclusions<textarea name="assumptions"></textarea></label></div><button>Save proposal</button></form>
+          <article><h2>Proposal versions</h2><div data-proposals></div></article></div>
+      </section>
+
       <section class="view" data-panel="projects">
         <div class="split"><form data-project-form><input type="hidden" name="id"><h2>Project tracker</h2><div class="form-grid">
           <label>Project name<input name="project_name" required></label><label>Client<input name="client_name" required></label><label>Email<input name="client_email" type="email"></label>
@@ -64,7 +90,22 @@
         <article data-project-work><p class="muted">Select a project to manage milestones and tasks.</p></article>
       </section>
 
+      <section class="view" data-panel="finance">
+        <div class="metrics" data-finance-metrics></div><div class="grid two"><form data-transaction-form><h2>Record cash movement</h2><div class="form-grid"><label>Date<input name="transaction_date" type="date" required></label><label>Type<select name="transaction_type"><option>income</option><option>expense</option><option>tax_reserve</option><option>transfer</option></select></label><label>Category<input name="category" required></label><label>Currency<select name="currency"><option>USD</option><option>INR</option></select></label><label>Amount<input name="amount" type="number" min="0" required></label><label>USD/INR rate<input name="exchange_rate" type="number" min="0.0001" step="0.0001" value="83.5"></label><label class="wide">Description<input name="description" required></label><label class="check"><input name="is_pass_through" type="checkbox"> Pass-through cost</label></div><button>Save transaction</button></form>
+          <form data-invoice-form><h2>Create invoice</h2><div class="form-grid"><label>Client<input name="client_name" required></label><label>Email<input name="client_email" type="email"></label><label>Currency<select name="currency"><option>USD</option><option>INR</option></select></label><label>Total<input name="total" type="number" min="0" required></label><label>Issue date<input name="issued_on" type="date" required></label><label>Due date<input name="due_on" type="date"></label></div><button>Save invoice</button></form></div>
+        <div class="grid two"><article><h2>Transactions</h2><div data-transactions></div></article><article><h2>Invoices</h2><div data-invoices></div></article></div>
+      </section>
+
+      <section class="view" data-panel="referrals"><div class="split"><form data-referral-form><h2>Referral request</h2><label>Referrer name<input name="referrer_name" required></label><label>Referrer email<input name="referrer_email" type="email"></label><label>Status<select name="status"><option>planned</option><option>requested</option><option>introduced</option><option>qualified</option><option>won</option><option>lost</option><option>thanked</option></select></label><label>Next follow-up<input name="next_follow_up_at" type="datetime-local"></label><label>Manual reward note<textarea name="reward_description"></textarea></label><button>Save referral</button></form><article><h2>Referral pipeline</h2><div data-referrals></div></article></div></section>
+
+      <section class="view" data-panel="content"><div class="section-heading"><div><h2>LinkedIn + GitHub review queue</h2><p class="muted">Every item requires approval. Publishing falls back to copy/export when a platform permission is unavailable.</p></div></div><div class="toolbar"><select data-content-filter><option value="">All statuses</option><option>idea</option><option>review</option><option>approved</option><option>published</option></select></div><div data-content-items></div></section>
+
+      <section class="view" data-panel="sop"><div class="section-heading"><div><h2>Versioned client lifecycle</h2><p class="muted">Entry criteria and completion rules make every handoff verifiable.</p></div><button data-start-sop>Start simulated run</button></div><div data-sop-documents></div><article><h2>Active checklist runs</h2><div data-sop-runs></div></article></section>
+
+      <section class="view" data-panel="rag"><div class="split"><form data-knowledge-form><h2>Add knowledge</h2><label>Title<input name="title" required></label><label>Slug<input name="slug" required pattern="[a-z0-9-]+"></label><label>Type<select name="document_type"><option>faq</option><option>project</option><option>service</option><option>process</option><option>case_study</option><option>resume</option></select></label><label>Source URL<input name="source_url" type="url"></label><label>Content<textarea name="content" required></textarea></label><label class="check"><input name="is_published" type="checkbox"> Published to public RAG</label><button>Save and queue indexing</button></form><article><h2>Knowledge health</h2><div data-knowledge-documents></div></article></div><article><h2>Recent RAG queries</h2><div data-rag-metrics></div></article></section>
+
       <section class="view" data-panel="analytics"><div class="metrics" data-analytics-metrics></div><div class="grid two"><article><h2>Funnel</h2><div data-funnel></div></article><article><h2>Top referrers</h2><div data-referrers></div></article></div><article><h2>Recent events</h2><div data-events></div></article></section>
+      <section class="view" data-panel="settings"><form data-settings-form><h2>Platform controls</h2><p class="muted">Public features remain off until their hosted service and credentials pass verification.</p><div class="form-grid"><label class="wide">API base URL<input name="api_base_url" type="url" placeholder="https://kaushik-portfolio-api.vercel.app"></label><label>USD to INR rate<input name="usd_inr_rate" type="number" min="0.0001" step="0.0001"></label><label>Tax reserve %<input name="tax_reserve_percent" type="number" min="0" max="100"></label><label class="check"><input name="feature_rag_chat" type="checkbox"> Enable public RAG</label><label class="check"><input name="feature_lead_scanner" type="checkbox"> Enable scanner</label><label class="check"><input name="feature_gmail_drafts" type="checkbox"> Enable Gmail drafts</label><label class="check"><input name="feature_content_publish" type="checkbox"> Enable publishing</label></div><button>Save settings</button></form><article><h2>Integration status</h2><div data-integrations></div></article><article><h2>Recent audit history</h2><div data-audit-log></div></article></section>
     </section>
   </div>
 </body></html>

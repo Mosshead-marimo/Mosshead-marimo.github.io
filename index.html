@@ -8,6 +8,13 @@
       content="Kaushik Aadhithya Chiratanagandla designs production AI applications, RAG systems, agentic workflows, evaluation frameworks, and secure automation."
     />
     <meta name="theme-color" content="#050505" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Kaushik Aadhithya — Production AI Systems" />
+    <meta property="og:description" content="RAG, agentic workflows, AI evaluation, APIs, and secure automation—designed for real operations." />
+    <meta property="og:url" content="https://mosshead-marimo.github.io/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Kaushik Aadhithya — Production AI Systems" />
+    <meta name="twitter:description" content="Evidence-first AI systems, services, and a live grounded RAG demonstration." />
     <title>Kaushik Aadhithya — Generative AI Engineer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,6 +24,7 @@
     />
     <link rel="stylesheet" href="styles.css" />
     <script src="script.js" defer></script>
+    <script src="chat.js" defer></script>
     <script type="module" src="public-data.js"></script>
   </head>
   <body>
@@ -89,6 +97,27 @@
           <h2 id="work-title">Evidence over<br />AI theater.</h2>
           <p>AI systems designed around grounding, evaluation, uncertainty, security, and workflows that can operate beyond a notebook demo.</p>
         </div>
+
+        <article class="platform-case-study reveal" aria-labelledby="platform-case-title">
+          <div class="platform-case-intro">
+            <p class="kicker">Live flagship system</p>
+            <h3 id="platform-case-title">The portfolio is<br />the product proof.</h3>
+            <p>A working freelance operations platform built around the same principles I offer clients: secure intake, grounded AI, measurable workflows, human approval, and recoverable automation.</p>
+            <button class="button" type="button" data-open-chat>Ask the live RAG demo</button>
+          </div>
+          <div class="platform-architecture" aria-label="Platform architecture">
+            <div><span>01</span><strong>GitHub Pages</strong><small>Fast public portfolio and request experience</small></div>
+            <div><span>02</span><strong>Supabase</strong><small>Auth, RLS, vectors, operations, analytics</small></div>
+            <div><span>03</span><strong>Vercel + Gemini</strong><small>Grounded chat and protected document APIs</small></div>
+            <div><span>04</span><strong>Railway</strong><small>Scheduled discovery and recoverable jobs</small></div>
+          </div>
+          <dl class="platform-guardrails">
+            <div><dt>Grounding</dt><dd>Citations and deterministic live pricing</dd></div>
+            <div><dt>Control</dt><dd>Human approval before outreach or publishing</dd></div>
+            <div><dt>Privacy</dt><dd>Contact details stay in the request form, never chat</dd></div>
+            <div><dt>Claim limits</dt><dd>No invented client outcomes or vanity metrics</dd></div>
+          </dl>
+        </article>
 
         <article class="project project--feature reveal" data-project-card>
           <a href="https://github.com/Mosshead-marimo/Market_intel" target="_blank" rel="noreferrer" aria-label="View TradeSentinel on GitHub">
@@ -325,6 +354,20 @@
         <a class="button button--large reveal" href="mailto:ckaushikaadhithya@gmail.com?subject=AI%20project%20inquiry">ckaushikaadhithya@gmail.com <span>↗</span></a>
       </section>
     </main>
+
+    <aside class="rag-chat" data-rag-chat hidden aria-label="Portfolio AI assistant">
+      <button class="rag-chat-launcher" type="button" data-chat-toggle aria-expanded="false"><span aria-hidden="true">✦</span><span>Ask about my work</span></button>
+      <section class="rag-chat-panel" data-chat-panel hidden aria-labelledby="rag-chat-title">
+        <header><div><p>Grounded portfolio demo</p><h2 id="rag-chat-title">Ask KAUSHIK.AI</h2></div><button type="button" class="rag-chat-close" data-chat-close aria-label="Close assistant">×</button></header>
+        <div class="rag-chat-disclosure">Answers use curated portfolio sources and live service prices. This demo does not collect contact details.</div>
+        <div class="rag-chat-messages" data-chat-messages role="log" aria-live="polite"><div class="chat-message chat-message--assistant">Ask about services, project fit, RAG architecture, process, or current pricing.</div></div>
+        <div class="rag-chat-suggestions" data-chat-suggestions><button>What RAG services do you provide?</button><button>How much does an AI audit cost?</button><button>How do you make AI systems safer?</button></div>
+        <form data-chat-form><label class="sr-only" for="portfolio-chat-input">Question</label><textarea id="portfolio-chat-input" name="message" rows="2" maxlength="1200" placeholder="Ask a portfolio question…" required></textarea><button type="submit">Send</button></form>
+        <div class="rag-chat-citations" data-chat-citations></div>
+        <button class="rag-chat-request" type="button" data-chat-prefill hidden>Use this as a project request</button>
+        <p class="rag-chat-status" data-chat-status aria-live="polite"></p>
+      </section>
+    </aside>
 
     <footer class="site-footer">
       <a class="brand" href="#top"><span class="status-dot" aria-hidden="true"></span><span>KAUSHIK.AI</span></a>

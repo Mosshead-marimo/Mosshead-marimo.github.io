@@ -54,6 +54,7 @@ Deno.serve(async (req: Request) => {
   const budget = clean(body.budget, 80), timeline = clean(body.timeline, 80);
   const contactName = clean(body.name, 160), contactEmail = clean(body.email, 320).toLowerCase();
   const company = clean(body.company, 160), relevantLink = clean(body.link, 2048);
+  const utmSource = clean(body.utmSource, 160), utmMedium = clean(body.utmMedium, 160), utmCampaign = clean(body.utmCampaign, 160);
   const needs = Array.isArray(body.needs) ? [...new Set(body.needs.map((item) => clean(item, 80)))].filter((item) => allowedNeeds.has(item)) : [];
   let validLink = true;
   if (relevantLink) try { validLink = ["https:", "http:"].includes(new URL(relevantLink).protocol); } catch { validLink = false; }
@@ -76,7 +77,7 @@ Deno.serve(async (req: Request) => {
       service, project_stage: projectStage, project_name: projectName || null, problem, budget, timeline, needs,
       contact_name: contactName, contact_email: contactEmail, company: company || null, relevant_link: relevantLink || null,
       consent: true, source: "portfolio", ip_hash: ipHash, user_agent: clean(req.headers.get("user-agent"), 512) || null,
-      referrer: clean(body.referrer, 2048) || null,
+      referrer: clean(body.referrer, 2048) || null, utm_source: utmSource || null, utm_medium: utmMedium || null, utm_campaign: utmCampaign || null,
     }).select("id").single();
     if (error) throw error;
     return json({ ok: true, reference: data.id }, 201, origin);

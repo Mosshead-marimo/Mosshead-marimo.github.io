@@ -1,5 +1,6 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0/+esm";
 import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm";
+import { initOpsModules, renderOpsModules } from "./ops-modules.js";
 
 const URL = "https://hjdaprualapvzcsakbcd.supabase.co";
 const KEY = "sb_publishable_5RIwqitkK0bIky5SumAg4w_B9mjP29E";
@@ -10,8 +11,8 @@ const $$ = (q, root = document) => [...root.querySelectorAll(q)];
 const esc = (v = "") => String(v).replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
 const money = (cents, currency = "USD") => cents == null ? "Custom" : new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(cents / 100);
 const date = v => v ? new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: v.includes?.("T") ? "short" : undefined, timeZone: "Asia/Calcutta" }).format(new Date(v)) : "—";
-const state = { user: null, services: [], leads: [], activity: [], projects: [], milestones: [], tasks: [], events: [] };
-const titles = { dashboard: "Overview", services: "Services & prices", leads: "Lead inbox", projects: "Projects", analytics: "Analytics" };
+const state = { user: null, services: [], leads: [], activity: [], projects: [], milestones: [], tasks: [], events: [], sources: [], sourceRuns: [], discoveries: [], campaigns: [], recipients: [], outreachMessages: [], estimates: [], proposals: [], invoices: [], transactions: [], referrals: [], content: [], sops: [], sopSteps: [], sopRuns: [], knowledge: [], ragMetrics: [], settings: [], integrations: [], audits: [] };
+const titles = { dashboard: "Overview", services: "Services & prices", leads: "Lead inbox", leadfinder:"Lead finder", outreach:"Outreach", pricing:"Pricing calculator", proposals:"Proposals", projects: "Projects", finance:"Finance", referrals:"Referrals", content:"Content system", sop:"Process SOP", rag:"RAG knowledge", analytics: "Analytics", settings:"Platform settings" };
 
 function message(text = "", error = false) { const el = $("[data-app-message]"); el.textContent = text; el.style.color = error ? "var(--bad)" : "var(--good)"; }
 async function audit(action, entityType, entityId, beforeValue = null, afterValue = null) {
@@ -25,9 +26,19 @@ async function loadAll() {
     db.from("lead_contact_activity").select("*").order("contacted_at", { ascending: false }), db.from("projects").select("*").order("updated_at", { ascending: false }),
     db.from("project_milestones").select("*").order("expected_date"), db.from("project_tasks").select("*").order("due_at"),
     db.from("analytics_events").select("*").gte("occurred_at", since).order("occurred_at", { ascending: false }).limit(5000),
+    db.from("lead_source_configs").select("*").order("created_at",{ascending:false}), db.from("lead_source_runs").select("*").order("created_at",{ascending:false}).limit(50),
+    db.from("discovered_leads").select("*").order("score",{ascending:false}).limit(200), db.from("outreach_campaigns").select("*").order("created_at",{ascending:false}),
+    db.from("outreach_recipients").select("*").order("created_at",{ascending:false}), db.from("outreach_messages").select("*").order("created_at",{ascending:false}),
+    db.from("estimates").select("*").order("created_at",{ascending:false}), db.from("proposals").select("*").order("created_at",{ascending:false}),
+    db.from("invoices").select("*").order("created_at",{ascending:false}), db.from("financial_transactions").select("*").order("transaction_date",{ascending:false}),
+    db.from("referral_requests").select("*").order("created_at",{ascending:false}), db.from("content_items").select("*").order("created_at",{ascending:false}),
+    db.from("sop_documents").select("*").order("version",{ascending:false}), db.from("sop_steps").select("*").order("sort_order"), db.from("sop_runs").select("*").order("started_at",{ascending:false}),
+    db.from("knowledge_documents").select("*").order("updated_at",{ascending:false}), db.from("rag_query_metrics").select("*").order("created_at",{ascending:false}).limit(100),
+    db.from("site_settings").select("*").order("setting_key"), db.from("integration_connections").select("provider,status,account_label,scopes,last_checked_at,error_message,updated_at").order("provider"),
+    db.from("admin_audit_log").select("*").order("created_at",{ascending:false}).limit(100),
   ]);
   const error = queries.find(q => q.error)?.error; if (error) throw error;
-  [state.services, state.leads, state.activity, state.projects, state.milestones, state.tasks, state.events] = queries.map(q => q.data || []);
+  [state.services, state.leads, state.activity, state.projects, state.milestones, state.tasks, state.events, state.sources, state.sourceRuns, state.discoveries, state.campaigns, state.recipients, state.outreachMessages, state.estimates, state.proposals, state.invoices, state.transactions, state.referrals, state.content, state.sops, state.sopSteps, state.sopRuns, state.knowledge, state.ragMetrics, state.settings, state.integrations, state.audits] = queries.map(q => q.data || []);
   renderAll();
 }
 
@@ -70,7 +81,7 @@ function renderAnalytics() {
   $("[data-referrers]").innerHTML = refs.map(([r,n]) => `<div class=row><span>${esc(r)}</span><strong>${n}</strong></div>`).join("") || "<p class=muted>Direct or no data.</p>";
   $("[data-events]").innerHTML = `<table class=table><thead><tr><th>Time</th><th>Event</th><th>Path</th><th>Device</th></tr></thead><tbody>${state.events.slice(0,30).map(e=>`<tr><td>${date(e.occurred_at)}</td><td>${esc(e.event_type)}</td><td>${esc(e.page_path)}</td><td>${esc(e.device_category||"")}</td></tr>`).join("")}</tbody></table>`;
 }
-function renderAll() { renderDashboard(); renderServices(); renderLeads(); renderProjects(); renderAnalytics(); }
+function renderAll() { renderDashboard(); renderServices(); renderLeads(); renderProjects(); renderAnalytics(); renderOpsModules(); }
 
 $("[data-login-form]").addEventListener("submit", async e => { e.preventDefault(); const f = new FormData(e.currentTarget); const username = String(f.get("username")).trim().toLowerCase(); const msg = $("[data-login-message]"); msg.textContent = "Signing in…";
   if (username !== "strikerlight85") return void (msg.textContent = "Unknown admin username.");
@@ -81,7 +92,7 @@ async function enter(user) { const { data, error } = await db.from("admin_users"
   state.user = user; $("[data-login]").hidden = true; $("[data-app]").hidden = false; $("[data-date]").textContent = new Intl.DateTimeFormat("en-IN", { dateStyle:"full", timeZone:"Asia/Calcutta" }).format(new Date()); try { await loadAll(); } catch (e) { message(e.message, true); }
 }
 $("[data-signout]").addEventListener("click", async()=>{await db.auth.signOut();location.reload()});
-$$("[data-nav] button").forEach(b=>b.addEventListener("click",()=>{$$("[data-nav] button").forEach(x=>x.classList.toggle("active",x===b));$$('[data-panel]').forEach(p=>p.classList.toggle("active",p.dataset.panel===b.dataset.view));$("[data-title]").textContent=titles[b.dataset.view]}));
+$$("[data-nav] button").forEach(b=>b.addEventListener("click",()=>{$$("[data-nav] button").forEach(x=>x.classList.toggle("active",x===b));$$('[data-panel]').forEach(p=>p.classList.toggle("active",p.dataset.panel===b.dataset.view));$("[data-title]").textContent=titles[b.dataset.view]||b.textContent}));
 
 function resetServiceForm() { const f=$("[data-service-form]"); f.reset(); f.elements.id.value=""; f.elements.currency.value="USD"; f.elements.billing_unit.value="project"; $("[data-service-form-title]").textContent="Add service"; $("[data-service-submit]").textContent="Save new service"; $("[data-service-cancel]").hidden=true; $$("[data-service-id]").forEach(card=>card.classList.remove("editing")); }
 function editService(id) { const s=state.services.find(x=>x.id===id); if(!s)return; const f=$("[data-service-form]"); ["id","name","slug","short_description","pricing_type","currency","billing_unit","delivery_time","sort_order"].forEach(k=>f.elements[k].value=s[k]??""); f.elements.price_min.value=s.price_min==null?"":s.price_min/100; f.elements.price_max.value=s.price_max==null?"":s.price_max/100; f.elements.included_items.value=(s.included_items||[]).join("\n"); f.elements.is_published.checked=s.is_published; $("[data-service-form-title]").textContent=`Edit ${s.name}`; $("[data-service-submit]").textContent="Save changes"; $("[data-service-cancel]").hidden=false; $$("[data-service-id]").forEach(card=>card.classList.toggle("editing",card.dataset.serviceId===id)); f.scrollIntoView({behavior:"smooth",block:"start"}); f.elements.name.focus({preventScroll:true}); message(`Editing ${s.name}.`); }
@@ -99,7 +110,8 @@ $("[data-project-form]").addEventListener("submit",async e=>{e.preventDefault();
 $("[data-project-new]").addEventListener("click",()=>$("[data-project-form]").reset());$("[data-projects]").addEventListener("click",e=>{const p=state.projects.find(x=>x.id===e.target.closest("[data-project-id]")?.dataset.projectId);if(!p)return;const f=$("[data-project-form]");["id","project_name","client_name","client_email","status","start_date","expected_completion_date","progress","priority","scope","next_action"].forEach(k=>f.elements[k].value=p[k]??"");showProjectWork(p.id)});
 $("[data-project-work]").addEventListener("submit",async e=>{e.preventDefault();const mf=e.target.closest("[data-milestone-form]"),tf=e.target.closest("[data-task-form]");if(mf){const f=new FormData(mf),id=mf.dataset.milestoneForm;const{data,error}=await db.from("project_milestones").insert({project_id:id,name:f.get("name"),expected_date:f.get("expected_date")||null,status:f.get("status")}).select().single();if(error)return message(error.message,true);await audit("create","milestone",data.id,null,data);await loadAll();showProjectWork(id)}if(tf){const f=new FormData(tf),id=tf.dataset.taskForm;const{data,error}=await db.from("project_tasks").insert({project_id:id,title:f.get("title"),due_at:f.get("due_at")?new Date(f.get("due_at")).toISOString():null,priority:f.get("priority")}).select().single();if(error)return message(error.message,true);await audit("create","task",data.id,null,data);await loadAll();showProjectWork(id)}});
 
-$("[data-export]").addEventListener("click",()=>{const wb=XLSX.utils.book_new();const add=(name,rows)=>{const ws=XLSX.utils.json_to_sheet(rows);ws["!autofilter"]={ref:ws["!ref"]||"A1"};ws["!freeze"]={xSplit:0,ySplit:1};XLSX.utils.book_append_sheet(wb,ws,name)};add("Leads",state.leads.map(({ip_hash,user_agent,...x})=>x));add("Contact Activity",state.activity);add("Projects",state.projects);add("Milestones",state.milestones);add("Tasks",state.tasks);add("Analytics",state.events.map(({ip_hash,metadata,...x})=>x));XLSX.writeFile(wb,`kaushik-operations-${new Date().toISOString().slice(0,10)}.xlsx`)});
+$("[data-export]").addEventListener("click",()=>{const wb=XLSX.utils.book_new();const add=(name,rows)=>{const safe=rows.map(row=>Object.fromEntries(Object.entries(row).filter(([key])=>!key.includes("secret")&&!key.includes("token")).map(([key,value])=>[key,typeof value==="object"&&value!==null?JSON.stringify(value):value])));const ws=XLSX.utils.json_to_sheet(safe);ws["!autofilter"]={ref:ws["!ref"]||"A1"};ws["!freeze"]={xSplit:0,ySplit:1};XLSX.utils.book_append_sheet(wb,ws,name)};add("Leads",state.leads.map(({ip_hash,user_agent,...x})=>x));add("Contact Activity",state.activity);add("Projects",state.projects);add("Milestones",state.milestones);add("Tasks",state.tasks);add("Lead Discoveries",state.discoveries);add("Campaigns",state.campaigns);add("Outreach Messages",state.outreachMessages);add("Estimates",state.estimates);add("Proposals",state.proposals);add("Invoices",state.invoices);add("Transactions",state.transactions);add("Referrals",state.referrals);add("Content",state.content);add("Analytics",state.events.map(({ip_hash,metadata,...x})=>x));XLSX.writeFile(wb,`kaushik-operations-${new Date().toISOString().slice(0,10)}.xlsx`)});
 $("[data-export-csv]").addEventListener("click",()=>{const rows=state.leads.map(({ip_hash,user_agent,...x})=>x),csv=XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(rows)),link=document.createElement("a");link.href=window.URL.createObjectURL(new Blob([csv],{type:"text/csv"}));link.download=`kaushik-leads-${new Date().toISOString().slice(0,10)}.csv`;link.click();window.URL.revokeObjectURL(link.href)});
 
+initOpsModules({db,state,$,$$,esc,money,date,message,audit,loadAll});
 const { data: { session } } = await db.auth.getSession(); if (session?.user) await enter(session.user);
