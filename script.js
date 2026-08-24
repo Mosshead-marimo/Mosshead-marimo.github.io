@@ -279,6 +279,7 @@ if (requestForm) {
       submitButton.textContent = "Request received";
       submitStatus.textContent = `Thank you — your request is in Kaushik's lead inbox.${shortReference}`;
       submitStatus.classList.add("is-success");
+      window.dispatchEvent(new CustomEvent("portfolio:lead-submitted", { detail: { reference: result.reference } }));
       try { sessionStorage.removeItem("kaushik-ai-request"); } catch { /* no-op */ }
     } catch (error) {
       submitButton.disabled = false;

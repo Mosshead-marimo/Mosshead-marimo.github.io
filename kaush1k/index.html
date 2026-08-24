@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow"><title>KAUSHIK.AI — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css"><script type="module" src="admin.js"></script>
+</head>
+<body>
+  <main class="login-shell" data-login>
+    <form class="login-card" data-login-form>
+      <p class="eyebrow">KAUSHIK.AI / PRIVATE</p><h1>Admin<br><em>control room.</em></h1>
+      <label>Username<input name="username" autocomplete="username" required value="Strikerlight85"></label>
+      <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+      <button>Sign in</button><p class="message" data-login-message role="alert"></p>
+    </form>
+  </main>
+
+  <div class="app" data-app hidden>
+    <aside class="sidebar">
+      <a class="logo" href="../">KAUSHIK.AI</a><p class="muted">Operations</p>
+      <nav data-nav>
+        <button class="active" data-view="dashboard">Overview</button><button data-view="services">Services & prices</button>
+        <button data-view="leads">Lead inbox</button><button data-view="projects">Projects</button><button data-view="analytics">Analytics</button>
+      </nav><button class="signout" data-signout>Sign out</button>
+    </aside>
+    <section class="workspace">
+      <header><div><p class="eyebrow" data-date></p><h1 data-title>Overview</h1></div><div class="actions"><button class="ghost" data-export-csv>Export leads CSV</button><button data-export>Export Excel</button></div></header>
+      <p class="message" data-app-message aria-live="polite"></p>
+
+      <section class="view active" data-panel="dashboard">
+        <div class="metrics" data-metrics></div>
+        <div class="grid two"><article><h2>Needs attention</h2><div data-attention></div></article><article><h2>Recent leads</h2><div data-recent-leads></div></article></div>
+      </section>
+
+      <section class="view" data-panel="services">
+        <div class="split"><form data-service-form><input type="hidden" name="id"><h2>Edit service</h2>
+          <div class="form-grid"><label>Name<input name="name" required></label><label>Slug<input name="slug" required></label>
+          <label>Pricing<select name="pricing_type"><option>fixed</option><option>starting_at</option><option>range</option><option>hourly</option><option>monthly</option><option>custom</option></select></label>
+          <label>Minimum USD<input name="price_min" type="number" min="0" step="1"></label><label>Maximum USD<input name="price_max" type="number" min="0" step="1"></label>
+          <label>Delivery time<input name="delivery_time"></label><label class="wide">Short description<textarea name="short_description" required></textarea></label>
+          <label class="wide">Included items, one per line<textarea name="included_items"></textarea></label><label>Order<input name="sort_order" type="number" value="0"></label>
+          <label class="check"><input name="is_published" type="checkbox"> Published</label></div><div class="actions"><button>Save service</button><button type="button" class="ghost" data-service-new>Clear</button></div>
+        </form><div><h2>Service catalog</h2><div class="cards" data-services></div></div></div>
+      </section>
+
+      <section class="view" data-panel="leads">
+        <div class="toolbar"><input data-lead-search placeholder="Search leads"><select data-lead-filter><option value="">All statuses</option><option>new</option><option>contacted</option><option>qualified</option><option>closed</option><option>spam</option></select></div>
+        <div class="split leads"><div data-leads></div><article class="detail" data-lead-detail><p class="muted">Select a lead to view and contact.</p></article></div>
+      </section>
+
+      <section class="view" data-panel="projects">
+        <div class="split"><form data-project-form><input type="hidden" name="id"><h2>Project tracker</h2><div class="form-grid">
+          <label>Project name<input name="project_name" required></label><label>Client<input name="client_name" required></label><label>Email<input name="client_email" type="email"></label>
+          <label>Status<select name="status"><option>planned</option><option>active</option><option>waiting</option><option>at_risk</option><option>completed</option><option>cancelled</option></select></label>
+          <label>Start<input name="start_date" type="date"></label><label>Expected delivery<input name="expected_completion_date" type="date"></label>
+          <label>Progress %<input name="progress" type="number" min="0" max="100" value="0"></label><label>Priority<select name="priority"><option>low</option><option selected>medium</option><option>high</option><option>urgent</option></select></label>
+          <label class="wide">Scope<textarea name="scope"></textarea></label><label class="wide">Next action<textarea name="next_action"></textarea></label></div>
+          <div class="actions"><button>Save project</button><button type="button" class="ghost" data-project-new>Clear</button></div></form><div><h2>Delivery board</h2><div class="cards" data-projects></div></div></div>
+        <article data-project-work><p class="muted">Select a project to manage milestones and tasks.</p></article>
+      </section>
+
+      <section class="view" data-panel="analytics"><div class="metrics" data-analytics-metrics></div><div class="grid two"><article><h2>Funnel</h2><div data-funnel></div></article><article><h2>Top referrers</h2><div data-referrers></div></article></div><article><h2>Recent events</h2><div data-events></div></article></section>
+    </section>
+  </div>
+</body></html>

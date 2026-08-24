@@ -125,6 +125,10 @@ h1 em, h2 em { color: transparent; font-style: normal; -webkit-text-stroke: 1px 
 .service-item h3 { margin: 0; font-size: clamp(2rem, 4vw, 4rem); letter-spacing: -.06em; line-height: .95; text-transform: uppercase; }
 .service-item p { margin: 0; color: var(--muted); line-height: 1.65; }
 .service-item ul { display: flex; flex-wrap: wrap; gap: .55rem; margin: 0; padding: 0; list-style: none; }
+.service-price { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.25rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.service-price strong { color: var(--cyan); font-size: 1.05rem; }
+.service-price small { color: var(--muted); }
+.service-price a { margin-left: auto; color: white; font-size: .65rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .service-item li, .capability-card span { padding: .5rem .65rem; border: 1px solid var(--line); border-radius: 999px; color: #ccc; font-size: .6rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 
 .capability-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }

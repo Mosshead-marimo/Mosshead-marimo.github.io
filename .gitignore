@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+!.env.admin.local.example
+node_modules/
+supabase/.temp/
+plan.md

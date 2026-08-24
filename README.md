@@ -26,3 +26,9 @@ npx serve .
 After four validated steps, the visitor reviews the complete request and explicitly submits it to the `submit-lead` Supabase Edge Function. The function validates fields, rejects unapproved browser origins, uses a honeypot, rate-limits by a one-way IP hash, and writes with a server-only secret to the RLS-protected `lead_requests` table. No privileged Supabase key is shipped to the browser. A prefilled email remains available as a fallback.
 
 Supabase project: `kaushik-ai-portfolio` (`hjdaprualapvzcsakbcd`, Mumbai).
+
+## Private Admin
+
+The local admin panel is available at `/kaush1k/`. It includes service pricing, lead follow-ups, contact history, project dates, milestones, tasks, visitor analytics, and Excel/CSV exports. Supabase Auth and RLS protect every administrative table.
+
+The login seed is `scripts/seed-admin.mjs`. It reads `SUPABASE_SECRET_KEY` and `ADMIN_PASSWORD` from the environment; credentials are never stored in the script. Copy `.env.admin.local.example` only as a reference and keep populated environment files local.

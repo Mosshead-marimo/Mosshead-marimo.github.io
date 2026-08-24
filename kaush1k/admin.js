@@ -1,0 +1,101 @@
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0/+esm";
+import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm";
+
+const URL = "https://hjdaprualapvzcsakbcd.supabase.co";
+const KEY = "sb_publishable_5RIwqitkK0bIky5SumAg4w_B9mjP29E";
+const ADMIN_EMAIL = "strikerlight85@admin.kaushik.ai";
+const db = createClient(URL, KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+const $ = (q, root = document) => root.querySelector(q);
+const $$ = (q, root = document) => [...root.querySelectorAll(q)];
+const esc = (v = "") => String(v).replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+const money = (cents, currency = "USD") => cents == null ? "Custom" : new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(cents / 100);
+const date = v => v ? new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: v.includes?.("T") ? "short" : undefined, timeZone: "Asia/Calcutta" }).format(new Date(v)) : "—";
+const state = { user: null, services: [], leads: [], activity: [], projects: [], milestones: [], tasks: [], events: [] };
+const titles = { dashboard: "Overview", services: "Services & prices", leads: "Lead inbox", projects: "Projects", analytics: "Analytics" };
+
+function message(text = "", error = false) { const el = $("[data-app-message]"); el.textContent = text; el.style.color = error ? "var(--bad)" : "var(--good)"; }
+async function audit(action, entityType, entityId, beforeValue = null, afterValue = null) {
+  await db.from("admin_audit_log").insert({ admin_user_id: state.user.id, action, entity_type: entityType, entity_id: entityId, before_value: beforeValue, after_value: afterValue });
+}
+
+async function loadAll() {
+  const since = new Date(Date.now() - 30 * 86400000).toISOString();
+  const queries = await Promise.all([
+    db.from("services").select("*").order("sort_order"), db.from("lead_requests").select("*").order("created_at", { ascending: false }),
+    db.from("lead_contact_activity").select("*").order("contacted_at", { ascending: false }), db.from("projects").select("*").order("updated_at", { ascending: false }),
+    db.from("project_milestones").select("*").order("expected_date"), db.from("project_tasks").select("*").order("due_at"),
+    db.from("analytics_events").select("*").gte("occurred_at", since).order("occurred_at", { ascending: false }).limit(5000),
+  ]);
+  const error = queries.find(q => q.error)?.error; if (error) throw error;
+  [state.services, state.leads, state.activity, state.projects, state.milestones, state.tasks, state.events] = queries.map(q => q.data || []);
+  renderAll();
+}
+
+function metric(label, value, note = "") { return `<div class="metric"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></div>`; }
+function renderDashboard() {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const sessions = new Set(state.events.filter(e => new Date(e.occurred_at) >= today).map(e => e.session_id)).size;
+  const submissions = state.events.filter(e => e.event_type === "form_submit").length;
+  const active = state.projects.filter(p => ["planned", "active", "waiting", "at_risk"].includes(p.status));
+  $("[data-metrics]").innerHTML = metric("Visitors today", sessions) + metric("New leads", state.leads.filter(l => l.status === "new").length) + metric("Active projects", active.length) + metric("30d form submits", submissions);
+  const now = new Date();
+  const overdue = state.tasks.filter(t => t.status !== "completed" && t.due_at && new Date(t.due_at) < now);
+  const followups = state.leads.filter(l => l.next_follow_up_at && new Date(l.next_follow_up_at) <= now && !["closed", "spam"].includes(l.status));
+  $("[data-attention]").innerHTML = [...followups.map(l => `<div class="row"><span>Follow up: ${esc(l.contact_name)}</span><small>${date(l.next_follow_up_at)}</small></div>`), ...overdue.map(t => `<div class="row"><span>${esc(t.title)}</span><small class="overdue">Overdue</small></div>`)].join("") || "<p class=muted>Nothing overdue.</p>";
+  $("[data-recent-leads]").innerHTML = state.leads.slice(0, 6).map(l => `<div class="row"><span>${esc(l.contact_name)}<br><small>${esc(l.service)}</small></span><span class=tag>${esc(l.status)}</span></div>`).join("") || "<p class=muted>No leads yet.</p>";
+}
+function priceLabel(s) { if (s.pricing_type === "range") return `${money(s.price_min, s.currency)}–${money(s.price_max, s.currency)}`; if (s.pricing_type === "starting_at") return `From ${money(s.price_min, s.currency)}`; if (s.pricing_type === "custom") return "Custom quote"; return money(s.price_min, s.currency) + (s.billing_unit === "month" ? "/mo" : ""); }
+function renderServices() { $("[data-services]").innerHTML = state.services.map(s => `<div class=card data-service-id="${s.id}"><span class=tag>${esc(s.pricing_type)}</span><h3>${esc(s.name)}</h3><p class=price>${esc(priceLabel(s))}</p><small>${s.is_published ? "Published" : "Draft"} · ${esc(s.delivery_time || "No timing")}</small></div>`).join(""); }
+function leadRows() {
+  const q = $("[data-lead-search]").value.toLowerCase(), status = $("[data-lead-filter]").value;
+  return state.leads.filter(l => (!status || l.status === status) && (!q || [l.contact_name,l.contact_email,l.company,l.service,l.project_name].join(" ").toLowerCase().includes(q)));
+}
+function renderLeads() { $("[data-leads]").innerHTML = leadRows().map(l => `<div class=card data-lead-id="${l.id}"><span class=tag>${esc(l.status)}</span><h3>${esc(l.contact_name)}</h3><p>${esc(l.service)}</p><small>${date(l.created_at)} · ${esc(l.budget)}</small></div>`).join("") || "<p class=muted>No matching leads.</p>"; }
+function showLead(id) {
+  const l = state.leads.find(x => x.id === id); if (!l) return; const acts = state.activity.filter(a => a.lead_request_id === id);
+  $("[data-lead-detail]").innerHTML = `<span class=tag>${esc(l.status)}</span><h2>${esc(l.contact_name)}</h2><p><a href="mailto:${encodeURIComponent(l.contact_email)}?subject=${encodeURIComponent(`Re: ${l.service} request`)}">${esc(l.contact_email)}</a></p>
+  <dl><div><dt>Service</dt><dd>${esc(l.service)}</dd></div><div><dt>Company</dt><dd>${esc(l.company || "—")}</dd></div><div><dt>Budget</dt><dd>${esc(l.budget)}</dd></div><div><dt>Timeline</dt><dd>${esc(l.timeline)}</dd></div><div><dt>Problem</dt><dd>${esc(l.problem)}</dd></div></dl>
+  <div class=actions><select data-lead-status>${["new","contacted","qualified","closed","spam"].map(s => `<option ${s===l.status?"selected":""}>${s}</option>`).join("")}</select><button data-save-lead="${id}">Save status</button><button class=ghost data-convert-lead="${id}">Make project</button></div>
+  <form data-contact-form="${id}"><h3>Record contact</h3><div class=form-grid><label>Method<select name=contact_method><option>email</option><option>call</option><option>meeting</option><option>linkedin</option><option>note</option></select></label><label>Direction<select name=direction><option>outbound</option><option>inbound</option><option>internal</option></select></label><label class=wide>Notes<textarea name=notes required></textarea></label><label>Next follow-up<input type=datetime-local name=next_follow_up_at></label></div><button>Save activity</button></form>
+  <h3>Activity</h3>${acts.map(a => `<div class=row><span>${esc(a.contact_method)} · ${esc(a.notes)}</span><small>${date(a.contacted_at)}</small></div>`).join("") || "<p class=muted>No activity yet.</p>"}`;
+}
+function renderProjects() { $("[data-projects]").innerHTML = state.projects.map(p => `<div class=card data-project-id="${p.id}"><span class=tag>${esc(p.status)}</span><h3>${esc(p.project_name)}</h3><p>${esc(p.client_name)}</p><div class=bar><span style="width:${p.progress}%"></span></div><small>${p.progress}% · due ${date(p.expected_completion_date)}</small></div>`).join("") || "<p class=muted>No projects yet.</p>"; }
+function showProjectWork(id){const p=state.projects.find(x=>x.id===id),ms=state.milestones.filter(x=>x.project_id===id),ts=state.tasks.filter(x=>x.project_id===id);if(!p)return;$("[data-project-work]").innerHTML=`<h2>${esc(p.project_name)} — delivery plan</h2><div class="grid two"><form data-milestone-form="${id}"><h3>Add milestone</h3><label>Name<input name=name required></label><label>Expected date<input name=expected_date type=date></label><label>Status<select name=status><option>not_started</option><option>in_progress</option><option>blocked</option><option>completed</option></select></label><button>Add milestone</button></form><form data-task-form="${id}"><h3>Add task</h3><label>Title<input name=title required></label><label>Due date and time<input name=due_at type=datetime-local></label><label>Priority<select name=priority><option>low</option><option selected>medium</option><option>high</option><option>urgent</option></select></label><button>Add task</button></form></div><div class="grid two"><div><h3>Milestones</h3>${ms.map(x=>`<div class=row><span>${esc(x.name)}</span><small>${esc(x.status)} · ${date(x.expected_date)}</small></div>`).join("")||"<p class=muted>None yet.</p>"}</div><div><h3>Tasks</h3>${ts.map(x=>`<div class=row><span>${esc(x.title)}</span><small>${esc(x.status)} · ${date(x.due_at)}</small></div>`).join("")||"<p class=muted>None yet.</p>"}</div></div>`}
+function renderAnalytics() {
+  const views = state.events.filter(e => e.event_type === "page_view"), sessions = new Set(state.events.map(e => e.session_id)).size;
+  const clicks = state.events.filter(e => e.event_type === "cta_click").length, starts = state.events.filter(e => e.event_type === "form_start").length, submits = state.events.filter(e => e.event_type === "form_submit").length;
+  $("[data-analytics-metrics]").innerHTML = metric("30d page views", views.length) + metric("Unique sessions", sessions) + metric("CTA clicks", clicks) + metric("Conversion", sessions ? `${(submits/sessions*100).toFixed(1)}%` : "0%");
+  $("[data-funnel]").innerHTML = [["Sessions",sessions],["CTA clicks",clicks],["Form starts",starts],["Submissions",submits]].map(x => `<div class=row><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("");
+  const refs = Object.entries(state.events.reduce((a,e)=>(e.referrer_host&&(a[e.referrer_host]=(a[e.referrer_host]||0)+1),a),{})).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  $("[data-referrers]").innerHTML = refs.map(([r,n]) => `<div class=row><span>${esc(r)}</span><strong>${n}</strong></div>`).join("") || "<p class=muted>Direct or no data.</p>";
+  $("[data-events]").innerHTML = `<table class=table><thead><tr><th>Time</th><th>Event</th><th>Path</th><th>Device</th></tr></thead><tbody>${state.events.slice(0,30).map(e=>`<tr><td>${date(e.occurred_at)}</td><td>${esc(e.event_type)}</td><td>${esc(e.page_path)}</td><td>${esc(e.device_category||"")}</td></tr>`).join("")}</tbody></table>`;
+}
+function renderAll() { renderDashboard(); renderServices(); renderLeads(); renderProjects(); renderAnalytics(); }
+
+$("[data-login-form]").addEventListener("submit", async e => { e.preventDefault(); const f = new FormData(e.currentTarget); const username = String(f.get("username")).trim().toLowerCase(); const msg = $("[data-login-message]"); msg.textContent = "Signing in…";
+  if (username !== "strikerlight85") return void (msg.textContent = "Unknown admin username.");
+  const { data, error } = await db.auth.signInWithPassword({ email: ADMIN_EMAIL, password: String(f.get("password")) });
+  if (error) return void (msg.textContent = error.message); await enter(data.user);
+});
+async function enter(user) { const { data, error } = await db.from("admin_users").select("username").eq("user_id", user.id).single(); if (error || !data) { await db.auth.signOut(); return void ($("[data-login-message]").textContent = "This account is not authorized."); }
+  state.user = user; $("[data-login]").hidden = true; $("[data-app]").hidden = false; $("[data-date]").textContent = new Intl.DateTimeFormat("en-IN", { dateStyle:"full", timeZone:"Asia/Calcutta" }).format(new Date()); try { await loadAll(); } catch (e) { message(e.message, true); }
+}
+$("[data-signout]").addEventListener("click", async()=>{await db.auth.signOut();location.reload()});
+$$("[data-nav] button").forEach(b=>b.addEventListener("click",()=>{$$("[data-nav] button").forEach(x=>x.classList.toggle("active",x===b));$$('[data-panel]').forEach(p=>p.classList.toggle("active",p.dataset.panel===b.dataset.view));$("[data-title]").textContent=titles[b.dataset.view]}));
+
+$("[data-service-form]").addEventListener("submit", async e => { e.preventDefault(); const f=new FormData(e.currentTarget), id=f.get("id"), before=state.services.find(s=>s.id===id)||null; const row={name:f.get("name"),slug:f.get("slug"),short_description:f.get("short_description"),pricing_type:f.get("pricing_type"),price_min:f.get("price_min")?Math.round(Number(f.get("price_min"))*100):null,price_max:f.get("price_max")?Math.round(Number(f.get("price_max"))*100):null,currency:"USD",billing_unit:f.get("pricing_type")==="monthly"?"month":"project",delivery_time:f.get("delivery_time")||null,included_items:String(f.get("included_items")||"").split("\n").map(x=>x.trim()).filter(Boolean),sort_order:Number(f.get("sort_order")||0),is_published:f.get("is_published")==="on"}; const q=id?db.from("services").update(row).eq("id",id).select().single():db.from("services").insert(row).select().single(); const {data,error}=await q;if(error)return message(error.message,true);await audit(id?"update":"create","service",data.id,before,data);e.currentTarget.reset();await loadAll();message("Service saved."); });
+$("[data-service-new]").addEventListener("click",()=>$("[data-service-form]").reset());
+$("[data-services]").addEventListener("click",e=>{const id=e.target.closest("[data-service-id]")?.dataset.serviceId,s=state.services.find(x=>x.id===id);if(!s)return;const f=$("[data-service-form]");["id","name","slug","short_description","pricing_type","delivery_time","sort_order"].forEach(k=>f.elements[k].value=s[k]??"");f.elements.price_min.value=s.price_min==null?"":s.price_min/100;f.elements.price_max.value=s.price_max==null?"":s.price_max/100;f.elements.included_items.value=(s.included_items||[]).join("\n");f.elements.is_published.checked=s.is_published;});
+
+$("[data-lead-search]").addEventListener("input",renderLeads);$("[data-lead-filter]").addEventListener("change",renderLeads);$("[data-leads]").addEventListener("click",e=>{const id=e.target.closest("[data-lead-id]")?.dataset.leadId;if(id)showLead(id)});
+$("[data-lead-detail]").addEventListener("click",async e=>{const save=e.target.closest("[data-save-lead]");if(save){const id=save.dataset.saveLead,status=$("[data-lead-status]").value,before=state.leads.find(x=>x.id===id);const{data,error}=await db.from("lead_requests").update({status}).eq("id",id).select().single();if(error)return message(error.message,true);await audit("status","lead",id,before,data);await loadAll();showLead(id)}const convert=e.target.closest("[data-convert-lead]");if(convert){const l=state.leads.find(x=>x.id===convert.dataset.convertLead);const{data,error}=await db.from("projects").insert({lead_request_id:l.id,client_name:l.contact_name,client_email:l.contact_email,project_name:l.project_name||`${l.service} project`,scope:l.problem,status:"planned"}).select().single();if(error)return message(error.message,true);await audit("convert","project",data.id,null,data);await loadAll();message("Lead converted to project.")}});
+$("[data-lead-detail]").addEventListener("submit",async e=>{const form=e.target.closest("[data-contact-form]");if(!form)return;e.preventDefault();const id=form.dataset.contactForm,f=new FormData(form),follow=f.get("next_follow_up_at")?new Date(f.get("next_follow_up_at")).toISOString():null;const{data,error}=await db.from("lead_contact_activity").insert({lead_request_id:id,contact_method:f.get("contact_method"),direction:f.get("direction"),notes:f.get("notes"),next_follow_up_at:follow,created_by:state.user.id}).select().single();if(error)return message(error.message,true);await db.from("lead_requests").update({status:"contacted",last_contacted_at:new Date().toISOString(),next_follow_up_at:follow}).eq("id",id);await audit("contact","lead",id,null,data);await loadAll();showLead(id)});
+
+$("[data-project-form]").addEventListener("submit",async e=>{e.preventDefault();const f=new FormData(e.currentTarget),id=f.get("id"),before=state.projects.find(p=>p.id===id)||null,row={project_name:f.get("project_name"),client_name:f.get("client_name"),client_email:f.get("client_email")||null,status:f.get("status"),start_date:f.get("start_date")||null,expected_completion_date:f.get("expected_completion_date")||null,progress:Number(f.get("progress")||0),priority:f.get("priority"),scope:f.get("scope")||null,next_action:f.get("next_action")||null};const q=id?db.from("projects").update(row).eq("id",id).select().single():db.from("projects").insert(row).select().single();const{data,error}=await q;if(error)return message(error.message,true);await audit(id?"update":"create","project",data.id,before,data);e.currentTarget.reset();await loadAll();message("Project saved.")});
+$("[data-project-new]").addEventListener("click",()=>$("[data-project-form]").reset());$("[data-projects]").addEventListener("click",e=>{const p=state.projects.find(x=>x.id===e.target.closest("[data-project-id]")?.dataset.projectId);if(!p)return;const f=$("[data-project-form]");["id","project_name","client_name","client_email","status","start_date","expected_completion_date","progress","priority","scope","next_action"].forEach(k=>f.elements[k].value=p[k]??"");showProjectWork(p.id)});
+$("[data-project-work]").addEventListener("submit",async e=>{e.preventDefault();const mf=e.target.closest("[data-milestone-form]"),tf=e.target.closest("[data-task-form]");if(mf){const f=new FormData(mf),id=mf.dataset.milestoneForm;const{data,error}=await db.from("project_milestones").insert({project_id:id,name:f.get("name"),expected_date:f.get("expected_date")||null,status:f.get("status")}).select().single();if(error)return message(error.message,true);await audit("create","milestone",data.id,null,data);await loadAll();showProjectWork(id)}if(tf){const f=new FormData(tf),id=tf.dataset.taskForm;const{data,error}=await db.from("project_tasks").insert({project_id:id,title:f.get("title"),due_at:f.get("due_at")?new Date(f.get("due_at")).toISOString():null,priority:f.get("priority")}).select().single();if(error)return message(error.message,true);await audit("create","task",data.id,null,data);await loadAll();showProjectWork(id)}});
+
+$("[data-export]").addEventListener("click",()=>{const wb=XLSX.utils.book_new();const add=(name,rows)=>{const ws=XLSX.utils.json_to_sheet(rows);ws["!autofilter"]={ref:ws["!ref"]||"A1"};ws["!freeze"]={xSplit:0,ySplit:1};XLSX.utils.book_append_sheet(wb,ws,name)};add("Leads",state.leads.map(({ip_hash,user_agent,...x})=>x));add("Contact Activity",state.activity);add("Projects",state.projects);add("Milestones",state.milestones);add("Tasks",state.tasks);add("Analytics",state.events.map(({ip_hash,metadata,...x})=>x));XLSX.writeFile(wb,`kaushik-operations-${new Date().toISOString().slice(0,10)}.xlsx`)});
+$("[data-export-csv]").addEventListener("click",()=>{const rows=state.leads.map(({ip_hash,user_agent,...x})=>x),csv=XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(rows)),link=document.createElement("a");link.href=window.URL.createObjectURL(new Blob([csv],{type:"text/csv"}));link.download=`kaushik-leads-${new Date().toISOString().slice(0,10)}.csv`;link.click();window.URL.revokeObjectURL(link.href)});
+
+const { data: { session } } = await db.auth.getSession(); if (session?.user) await enter(session.user);
