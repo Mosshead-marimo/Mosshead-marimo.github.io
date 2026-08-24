@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/chat.ts": { "maxDuration": 60, "memory": 1024 },
-    "api/proposals/render.ts": { "maxDuration": 60, "memory": 1024 }
+    "api/chat.ts": { "maxDuration": 60 },
+    "api/proposals/render.ts": { "maxDuration": 60 }
   },
   "headers": [
     {
