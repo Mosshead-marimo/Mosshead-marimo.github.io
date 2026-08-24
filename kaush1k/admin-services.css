@@ -1,0 +1,29 @@
+.service-card {
+  cursor: default;
+}
+
+.service-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.edit-service {
+  padding: .55rem .9rem;
+}
+
+.service-card.editing {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 1px var(--cyan);
+}
+
+.service-form-help {
+  margin: -.5rem 0 1.25rem;
+  line-height: 1.5;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: .6;
+}

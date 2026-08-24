@@ -5,7 +5,7 @@
   <meta name="robots" content="noindex,nofollow"><title>KAUSHIK.AI — Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css"><script type="module" src="admin.js"></script>
+  <link rel="stylesheet" href="admin.css"><link rel="stylesheet" href="admin-services.css"><script type="module" src="admin.js"></script>
 </head>
 <body>
   <main class="login-shell" data-login>
@@ -35,14 +35,17 @@
       </section>
 
       <section class="view" data-panel="services">
-        <div class="split"><form data-service-form><input type="hidden" name="id"><h2>Edit service</h2>
+        <div class="split"><form data-service-form><input type="hidden" name="id"><h2 data-service-form-title>Add service</h2>
+          <p class="muted service-form-help">Choose Edit on a service, change any field, then save. Published changes appear on the portfolio immediately.</p>
           <div class="form-grid"><label>Name<input name="name" required></label><label>Slug<input name="slug" required></label>
-          <label>Pricing<select name="pricing_type"><option>fixed</option><option>starting_at</option><option>range</option><option>hourly</option><option>monthly</option><option>custom</option></select></label>
-          <label>Minimum USD<input name="price_min" type="number" min="0" step="1"></label><label>Maximum USD<input name="price_max" type="number" min="0" step="1"></label>
+          <label>Pricing model<select name="pricing_type"><option value="fixed">Fixed price</option><option value="starting_at">Starting at</option><option value="range">Price range</option><option value="hourly">Hourly</option><option value="monthly">Monthly</option><option value="custom">Custom quote</option></select></label>
+          <label>Currency<select name="currency"><option value="USD">USD — US Dollar</option><option value="INR">INR — Indian Rupee</option><option value="EUR">EUR — Euro</option><option value="GBP">GBP — British Pound</option></select></label>
+          <label>Minimum amount<input name="price_min" type="number" min="0" step="1"></label><label>Maximum amount<input name="price_max" type="number" min="0" step="1"></label>
+          <label>Billing unit<select name="billing_unit"><option value="project">Per project</option><option value="hour">Per hour</option><option value="day">Per day</option><option value="month">Per month</option></select></label>
           <label>Delivery time<input name="delivery_time"></label><label class="wide">Short description<textarea name="short_description" required></textarea></label>
           <label class="wide">Included items, one per line<textarea name="included_items"></textarea></label><label>Order<input name="sort_order" type="number" value="0"></label>
-          <label class="check"><input name="is_published" type="checkbox"> Published</label></div><div class="actions"><button>Save service</button><button type="button" class="ghost" data-service-new>Clear</button></div>
-        </form><div><h2>Service catalog</h2><div class="cards" data-services></div></div></div>
+          <label class="check"><input name="is_published" type="checkbox"> Published</label></div><div class="actions"><button data-service-submit>Save new service</button><button type="button" class="ghost" data-service-new>Clear</button><button type="button" class="ghost" data-service-cancel hidden>Cancel editing</button></div>
+        </form><div><h2>Service catalog</h2><p class="muted">Use the Edit button to update a service or its pricing.</p><div class="cards" data-services></div></div></div>
       </section>
 
       <section class="view" data-panel="leads">
