@@ -3,5 +3,6 @@
 !.env.example
 !.env.admin.local.example
 node_modules/
+services/railway-jobs/dist/
 supabase/.temp/
 plan.md
